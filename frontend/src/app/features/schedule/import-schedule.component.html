@@ -1,0 +1,56 @@
+<div class="row justify-content-center">
+  <div class="col-12 col-md-6">
+    <div class="card shadow-sm">
+      <div class="card-header">
+        <h6 class="mb-0">Importar Horario</h6>
+      </div>
+      <div class="card-body">
+
+        <p class="text-muted small mb-3">
+          Selecciona el fichero <code>Datos_horarios.txt</code> (separado por tabuladores).
+          La importación reemplaza las entradas existentes de cada profesor.
+        </p>
+
+        <div class="mb-3">
+          <label class="form-label">Fichero de horario</label>
+          <input
+            type="file"
+            class="form-control"
+            accept=".txt,.csv"
+            (change)="onFileChange($event)"
+          />
+        </div>
+
+        @if (error) {
+          <div class="alert alert-danger py-2 small">{{ error }}</div>
+        }
+
+        @if (resultado) {
+          <div class="alert alert-success">
+            <strong>Importación completada</strong><br />
+            <span class="small">
+              {{ resultado.filas_importadas }} entradas importadas &bull;
+              {{ resultado.profesores_creados }} profesores nuevos
+              @if (resultado.filas_duplicadas) {
+                &bull; {{ resultado.filas_duplicadas }} duplicadas exactas omitidas
+              }
+              @if (resultado.filas_con_error) {
+                &bull; {{ resultado.filas_con_error }} con error
+              }
+            </span>
+          </div>
+        }
+
+        <button
+          class="btn btn-primary w-100"
+          [disabled]="importando || !archivo"
+          (click)="importar()"
+        >
+          @if (importando) { <span class="spinner-border spinner-border-sm me-1"></span> }
+          Importar
+        </button>
+
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,141 @@
+<div class="row g-4">
+
+  <!-- Alta de ausencia propia para los tramos que el profesor tiene ese dia. -->
+  <div class="col-12 col-lg-4">
+    <div class="card shadow-sm">
+      <div class="card-header">
+        <h6 class="mb-0">Registrar ausencia</h6>
+      </div>
+      <div class="card-body">
+
+        <div class="mb-3">
+          <label class="form-label">Fecha</label>
+          <input
+            type="date"
+            class="form-control"
+            [(ngModel)]="form.fecha"
+            (ngModelChange)="onFechaChange()"
+          />
+        </div>
+
+        @if (form.fecha && tramosDelDia.length === 0) {
+          <div class="alert alert-warning small py-2">
+            No tienes clases ese día o es fin de semana.
+          </div>
+        }
+
+        @if (tramosDelDia.length > 0) {
+          <div class="mb-3">
+            <label class="form-label">Tramos a registrar</label>
+            <div class="d-flex flex-wrap gap-2">
+              @for (tramo of tramosDelDia; track tramo.id) {
+                <button
+                  type="button"
+                  class="btn btn-sm"
+                  [class.btn-primary]="isHoraSeleccionada(tramo.hora)"
+                  [class.btn-outline-secondary]="!isHoraSeleccionada(tramo.hora)"
+                  (click)="toggleHora(tramo.hora)"
+                >
+                  {{ tramo.hora }}ª — {{ tramo.asignatura }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+
+        <div class="mb-3">
+          <label class="form-label">Descripción (opcional)</label>
+          <textarea
+            class="form-control"
+            rows="2"
+            [(ngModel)]="form.descripcion"
+            placeholder="Motivo de la ausencia..."
+          ></textarea>
+        </div>
+
+        @if (error) {
+          <div class="alert alert-danger py-2 small">{{ error }}</div>
+        }
+        @if (exito) {
+          <div class="alert alert-success py-2 small">{{ exito }}</div>
+        }
+
+        <button
+          class="btn btn-primary w-100"
+          [disabled]="guardando || !form.fecha || form.horas.length === 0"
+          (click)="crearAusencia()"
+        >
+          @if (guardando) { <span class="spinner-border spinner-border-sm me-1"></span> }
+          Registrar
+        </button>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Resumen personal: pendientes y justificadas. -->
+  <div class="col-12 col-lg-8">
+    <div class="card shadow-sm">
+      <div class="card-header">
+        <h6 class="mb-0">Mis ausencias</h6>
+      </div>
+      <div class="card-body p-0">
+
+        @if (loading) {
+          <div class="text-center py-4">
+            <div class="spinner-border text-primary"></div>
+          </div>
+        } @else if (ausencias.length === 0) {
+          <p class="text-muted text-center py-4 mb-0">No tienes ausencias registradas.</p>
+        } @else {
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Fecha</th>
+                  <th>Hora</th>
+                  <th>Asignatura</th>
+                  <th>Estado</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (a of ausencias; track a.id) {
+                  <tr>
+                    <td>{{ a.fecha }}</td>
+                    <td>{{ a.hora }}ª</td>
+                    <td>
+                      <div>{{ a.asignatura }}</div>
+                      @if (a.descripcion) {
+                        <small class="text-muted">{{ a.descripcion }}</small>
+                      }
+                    </td>
+                    <td>
+                      @if (a.justificada) {
+                        <span class="badge bg-success">Justificada</span>
+                      } @else {
+                        <span class="badge bg-warning text-dark">Pendiente</span>
+                      }
+                    </td>
+                    <td>
+                      @if (!a.justificada) {
+                        <button
+                          class="btn btn-sm btn-outline-danger"
+                          (click)="eliminar(a.id)"
+                        >
+                          Eliminar
+                        </button>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+
+      </div>
+    </div>
+  </div>
+
+</div>

@@ -1,0 +1,61 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+  <div class="container-fluid">
+    <a class="navbar-brand fw-bold" routerLink="/dashboard">Horarium</a>
+
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarNav"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/dashboard" routerLinkActive="active">Mi Horario</a>
+        </li>
+        @if (!auth.isEquipoDireccion()) {
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/absences" routerLinkActive="active">Mis Ausencias</a>
+          </li>
+        }
+
+        @if (auth.isEquipoDireccion()) {
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/absences/all" routerLinkActive="active">Ausencias</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/reports" routerLinkActive="active">Partes</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/schedule/search" routerLinkActive="active">Buscar Horario</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/users" routerLinkActive="active">Usuarios</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/schedule/import" routerLinkActive="active">Importar</a>
+          </li>
+        }
+      </ul>
+
+      <ul class="navbar-nav ms-auto align-items-center">
+        <li class="nav-item me-3">
+          <span class="text-white-50 small">{{ auth.currentUser()?.email }}</span>
+        </li>
+        <li class="nav-item me-2">
+          <a class="btn btn-outline-light btn-sm" routerLink="/change-password">
+            Cambiar contraseña
+          </a>
+        </li>
+        <li class="nav-item">
+          <button class="btn btn-outline-light btn-sm" (click)="logout()">
+            Cerrar sesión
+          </button>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>

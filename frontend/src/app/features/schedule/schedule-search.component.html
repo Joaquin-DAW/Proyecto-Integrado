@@ -1,0 +1,119 @@
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h5 class="mb-0">Buscar Horario</h5>
+</div>
+
+<!-- Filtros de busqueda del horario general. -->
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <div class="row g-2 align-items-end">
+
+      <div class="col-12 col-md-3">
+        <label class="form-label small">Profesor</label>
+        <input
+          type="text"
+          class="form-control form-control-sm"
+          placeholder="Nombre o apellido..."
+          [(ngModel)]="filtros.profesor_nombre"
+          (keyup.enter)="buscar()"
+        />
+      </div>
+
+      <div class="col-6 col-md-2">
+        <label class="form-label small">Día</label>
+        <select class="form-select form-select-sm" [(ngModel)]="filtros.dia">
+          <option value="">Todos</option>
+          @for (d of dias; track d.code) {
+            <option [value]="d.code">{{ d.label }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <label class="form-label small">Grupo / Asignatura</label>
+        <input
+          type="text"
+          class="form-control form-control-sm"
+          placeholder="ej: 1º BACH, 2ITE..."
+          [(ngModel)]="filtros.grupo"
+          (keyup.enter)="buscar()"
+        />
+      </div>
+
+      <div class="col-6 col-md-2">
+        <label class="form-label small">Aula</label>
+        <input
+          type="text"
+          class="form-control form-control-sm"
+          placeholder="ej: 114, T6..."
+          [(ngModel)]="filtros.aula"
+          (keyup.enter)="buscar()"
+        />
+      </div>
+
+      <div class="col-6 col-md-2 d-flex gap-2">
+        <button class="btn btn-primary btn-sm w-100" (click)="buscar()" [disabled]="loading">
+          @if (loading) { <span class="spinner-border spinner-border-sm me-1"></span> }
+          Buscar
+        </button>
+        <button class="btn btn-outline-secondary btn-sm" (click)="limpiar()" title="Limpiar">✕</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Tabla de resultados; aparece solo despues de lanzar una busqueda. -->
+@if (error) {
+  <div class="alert alert-danger">{{ error }}</div>
+}
+
+@if (buscado) {
+  <div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+      <span class="small fw-semibold">Resultados</span>
+      <span class="badge bg-secondary">{{ resultados.length }} entradas</span>
+    </div>
+    <div class="card-body p-0">
+      @if (resultados.length === 0) {
+        <p class="text-muted text-center py-4 mb-0">No se encontraron entradas con esos filtros.</p>
+      } @else {
+        <div class="table-responsive">
+          <table class="table table-hover table-sm mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Día</th>
+                <th class="text-center">Hora</th>
+                <th>Profesor/a</th>
+                <th>Asignatura</th>
+                <th>Grupo</th>
+                <th>Aula</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (e of resultados; track e.id) {
+                <tr>
+                  <td>{{ getDiaLabel(e.dia) }}</td>
+                  <td class="text-center">{{ e.hora }}ª</td>
+                  <td class="small">{{ e.profesor_nombre }}</td>
+                  <td>{{ e.asignatura }}</td>
+                  <td class="small text-muted">{{ e.curso }}</td>
+                  <td>
+                    @if (e.aula) {
+                      <span class="badge bg-secondary">{{ e.aula }}</span>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  </div>
+}
+
+@if (!buscado && !loading) {
+  <div class="text-center text-muted py-5">
+    <p class="mb-0">Introduce al menos un filtro para buscar.</p>
+  </div>
+}

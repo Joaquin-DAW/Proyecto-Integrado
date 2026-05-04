@@ -1,0 +1,40 @@
+# Entorno local
+.env
+.env.local
+.env.*.local
+
+# Python / Django
+__pycache__/
+*.py[cod]
+*.sqlite3
+.pytest_cache/
+.coverage
+htmlcov/
+backend/staticfiles/
+backend/media/
+
+# Entornos virtuales
+.venv/
+venv/
+env/
+
+# Angular / Node
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE y sistema
+.idea/
+.vscode/
+*.swp
+*.swo
+Thumbs.db
+Desktop.ini
+
+# Logs y temporales
+*.log
+tmp/
+temp/

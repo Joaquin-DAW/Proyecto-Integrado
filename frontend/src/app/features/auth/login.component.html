@@ -1,0 +1,61 @@
+<div class="min-vh-100 d-flex align-items-center justify-content-center bg-light">
+  <div class="card shadow-sm" style="width: 100%; max-width: 420px;">
+    <div class="card-body p-4">
+
+      <div class="text-center mb-4">
+        <h4 class="fw-bold text-primary mb-1">Horarium</h4>
+        <p class="text-muted small">IES Polígono Sur</p>
+      </div>
+
+      <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
+        <div class="mb-3">
+          <label for="email" class="form-label">Correo electrónico</label>
+          <input
+            id="email"
+            type="email"
+            class="form-control"
+            [(ngModel)]="email"
+            name="email"
+            placeholder="nombre.apellido@iespoligonosur.org"
+            required
+            autocomplete="email"
+          />
+        </div>
+
+        <div class="mb-3">
+          <label for="password" class="form-label">Contraseña</label>
+          <input
+            id="password"
+            type="password"
+            class="form-control"
+            [(ngModel)]="password"
+            name="password"
+            placeholder="••••••••"
+            required
+            autocomplete="current-password"
+          />
+        </div>
+
+        @if (error) {
+          <div class="alert alert-danger py-2 small">{{ error }}</div>
+        }
+
+        <button
+          type="submit"
+          class="btn btn-primary w-100"
+          [disabled]="loading || !email || !password"
+        >
+          @if (loading) {
+            <span class="spinner-border spinner-border-sm me-2"></span>
+          }
+          Iniciar sesión
+        </button>
+      </form>
+
+      <div class="text-center mt-3">
+        <a routerLink="/forgot-password" class="small">He olvidado mi contraseña</a>
+      </div>
+
+    </div>
+  </div>
+</div>

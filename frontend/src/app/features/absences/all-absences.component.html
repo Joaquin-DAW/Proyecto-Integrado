@@ -1,0 +1,88 @@
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h5 class="mb-0">Gestión de Ausencias</h5>
+</div>
+
+<!-- Filtro sencillo para revisar un dia concreto sin perder el listado general. -->
+<div class="card shadow-sm mb-3">
+  <div class="card-body py-2">
+    <div class="row g-2 align-items-end">
+      <div class="col-auto">
+        <label class="form-label mb-1 small">Filtrar por fecha</label>
+        <input
+          type="date"
+          class="form-control form-control-sm"
+          [(ngModel)]="filtroFecha"
+          (ngModelChange)="cargar()"
+        />
+      </div>
+      @if (filtroFecha) {
+        <div class="col-auto">
+          <button class="btn btn-sm btn-outline-secondary" (click)="limpiarFiltro()">
+            Limpiar filtro
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body p-0">
+    @if (loading) {
+      <div class="text-center py-4">
+        <div class="spinner-border text-primary"></div>
+      </div>
+    } @else if (error) {
+      <div class="alert alert-danger m-3">{{ error }}</div>
+    } @else if (ausencias.length === 0) {
+      <p class="text-muted text-center py-4 mb-0">No hay ausencias registradas.</p>
+    } @else {
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Fecha</th>
+              <th>Profesor</th>
+              <th>Hora</th>
+              <th>Asignatura</th>
+              <th>Aula</th>
+              <th>Descripción</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (a of ausencias; track a.id) {
+              <tr>
+                <td class="text-nowrap">{{ a.fecha }}</td>
+                <td class="small">{{ a.profesor_nombre }}</td>
+                <td class="text-center">{{ a.hora }}ª</td>
+                <td>{{ a.asignatura }}</td>
+                <td>{{ a.aula || '—' }}</td>
+                <td class="small text-muted">{{ a.descripcion || '—' }}</td>
+                <td>
+                  <button
+                    class="btn btn-sm"
+                    [class.btn-success]="a.justificada"
+                    [class.btn-outline-warning]="!a.justificada"
+                    (click)="toggleJustificada(a)"
+                  >
+                    {{ a.justificada ? 'Justificada' : 'Pendiente' }}
+                  </button>
+                </td>
+                <td>
+                  <button
+                    class="btn btn-sm btn-outline-danger"
+                    (click)="eliminar(a.id)"
+                  >
+                    Eliminar
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,107 @@
+<div class="row g-4">
+
+  <!-- Formulario para regenerar un parte concreto si cambian las ausencias. -->
+  <div class="col-12 col-lg-4">
+    <div class="card shadow-sm">
+      <div class="card-header">
+        <h6 class="mb-0">Generar parte</h6>
+      </div>
+      <div class="card-body">
+
+        <div class="mb-3">
+          <label class="form-label">Fecha</label>
+          <input type="date" class="form-control" [(ngModel)]="form.fecha" />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Módulo</label>
+          <select class="form-select" [(ngModel)]="form.tipo">
+            <option value="A">Módulo A</option>
+            <option value="B">Módulo B</option>
+          </select>
+        </div>
+
+        @if (error) {
+          <div class="alert alert-danger py-2 small">{{ error }}</div>
+        }
+        @if (exito) {
+          <div class="alert alert-success py-2 small">{{ exito }}</div>
+        }
+
+        <button
+          class="btn btn-primary w-100"
+          [disabled]="generando || !form.fecha"
+          (click)="generar()"
+        >
+          @if (generando) { <span class="spinner-border spinner-border-sm me-1"></span> }
+          Generar PDF
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Historico de PDFs ya creados para descargar o mandar por correo. -->
+  <div class="col-12 col-lg-8">
+    <div class="card shadow-sm">
+      <div class="card-header">
+        <h6 class="mb-0">Partes generados</h6>
+      </div>
+      <div class="card-body p-0">
+        @if (loading) {
+          <div class="text-center py-4">
+            <div class="spinner-border text-primary"></div>
+          </div>
+        } @else if (partes.length === 0) {
+          <p class="text-muted text-center py-4 mb-0">No hay partes generados.</p>
+        } @else {
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Fecha</th>
+                  <th>Módulo</th>
+                  <th>Generado</th>
+                  <th>PDF</th>
+                  <th>Email</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (p of partes; track p.id) {
+                  <tr>
+                    <td>{{ p.fecha }}</td>
+                    <td>
+                      <span class="badge" [class.bg-primary]="p.tipo === 'A'" [class.bg-info]="p.tipo === 'B'">
+                        Módulo {{ p.tipo }}
+                      </span>
+                    </td>
+                    <td class="small text-muted">{{ p.generado_en | date: 'dd/MM/yyyy HH:mm' }}</td>
+                    <td>
+                      @if (p.pdf_url) {
+                        <a [href]="p.pdf_url" target="_blank" class="btn btn-sm btn-outline-primary">
+                          Descargar
+                        </a>
+                      } @else {
+                        <span class="text-muted small">—</span>
+                      }
+                    </td>
+                    <td>
+                      <button
+                        class="btn btn-sm btn-outline-secondary"
+                        [disabled]="!p.pdf_url || enviandoId === p.id"
+                        (click)="enviar(p)"
+                      >
+                        @if (enviandoId === p.id) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                        Enviar
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+</div>

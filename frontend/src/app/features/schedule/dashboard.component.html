@@ -1,0 +1,49 @@
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h5 class="mb-0">Mi Horario</h5>
+</div>
+
+@if (loading) {
+  <div class="text-center py-5">
+    <div class="spinner-border text-primary"></div>
+  </div>
+} @else if (error) {
+  <div class="alert alert-danger">{{ error }}</div>
+} @else {
+  <div class="table-responsive">
+    <table class="table table-bordered table-sm text-center align-middle">
+      <thead class="table-primary">
+        <tr>
+          <th style="width: 60px">Hora</th>
+          @for (dia of dias; track dia.code) {
+            <th>{{ dia.label }}</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (hora of horas; track hora) {
+          <tr [class.table-secondary]="recreos.has(hora)">
+            <td class="fw-semibold">{{ hora }}</td>
+            @if (recreos.has(hora)) {
+              <td colspan="5" class="text-muted fst-italic small">Recreo</td>
+            } @else {
+              @for (dia of dias; track dia.code) {
+                @let entry = getEntrada(dia.code, hora);
+                <td>
+                  @if (entry) {
+                    <div class="fw-semibold small">{{ entry.asignatura }}</div>
+                    @if (entry.curso) {
+                      <div class="text-muted" style="font-size: 0.75rem">{{ entry.curso }}</div>
+                    }
+                    @if (entry.aula) {
+                      <span class="badge bg-secondary" style="font-size: 0.7rem">{{ entry.aula }}</span>
+                    }
+                  }
+                </td>
+              }
+            }
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

@@ -14,8 +14,9 @@
         </div>
 
         <div class="mb-3">
-          <label class="form-label">Módulo</label>
+          <label class="form-label">Tipo</label>
           <select class="form-select" [(ngModel)]="form.tipo">
+            <option value="G">IES completo</option>
             <option value="A">Módulo A</option>
             <option value="B">Módulo B</option>
           </select>
@@ -59,7 +60,7 @@
               <thead class="table-light">
                 <tr>
                   <th>Fecha</th>
-                  <th>Módulo</th>
+                  <th>Tipo</th>
                   <th>Generado</th>
                   <th>PDF</th>
                   <th>Email</th>
@@ -68,10 +69,10 @@
               <tbody>
                 @for (p of partes; track p.id) {
                   <tr>
-                    <td>{{ p.fecha }}</td>
+                    <td>{{ p.fecha | date: 'dd/MM/yyyy' }}</td>
                     <td>
-                      <span class="badge" [class.bg-primary]="p.tipo === 'A'" [class.bg-info]="p.tipo === 'B'">
-                        Módulo {{ p.tipo }}
+                      <span class="badge" [ngClass]="tipoBadgeClass(p.tipo)">
+                        {{ p.tipo_display || tipoLabel(p.tipo) }}
                       </span>
                     </td>
                     <td class="small text-muted">{{ p.generado_en | date: 'dd/MM/yyyy HH:mm' }}</td>
@@ -81,7 +82,7 @@
                           Descargar
                         </a>
                       } @else {
-                        <span class="text-muted small">—</span>
+                        <span class="text-muted small">-</span>
                       }
                     </td>
                     <td>

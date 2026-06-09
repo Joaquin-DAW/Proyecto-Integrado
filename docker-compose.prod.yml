@@ -1,0 +1,101 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: horarium_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-horarium}
+      POSTGRES_USER: ${POSTGRES_USER:-horarium}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-horarium123}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-horarium}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: horarium_redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: horarium_backend
+    restart: unless-stopped
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py setup_periodic_tasks &&
+             gunicorn horarium.wsgi:application --bind 0.0.0.0:8000 --workers 2"
+    volumes:
+      - media_data:/app/media
+    expose:
+      - "8000"
+    env_file:
+      - .env
+    environment:
+      DJANGO_SETTINGS_MODULE: horarium.settings.production
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: horarium_celery_worker
+    restart: unless-stopped
+    command: celery -A horarium worker --loglevel=info
+    volumes:
+      - media_data:/app/media
+    env_file:
+      - .env
+    environment:
+      DJANGO_SETTINGS_MODULE: horarium.settings.production
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery_beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: horarium_celery_beat
+    restart: unless-stopped
+    command: celery -A horarium beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    env_file:
+      - .env
+    environment:
+      DJANGO_SETTINGS_MODULE: horarium.settings.production
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: horarium_frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  media_data:

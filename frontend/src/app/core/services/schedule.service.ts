@@ -18,9 +18,11 @@ export interface ImportScheduleResult {
 }
 
 export interface FiltrosHorario {
+  profesor_id?: number;
   profesor_nombre?: string;
   dia?: string;
   grupo?: string;
+  asignatura?: string;
   aula?: string;
 }
 
@@ -36,9 +38,11 @@ export class ScheduleService {
 
   buscar(filtros: FiltrosHorario) {
     let params = new HttpParams().set('page_size', '200');
+    if (filtros.profesor_id) params = params.set('profesor_id', String(filtros.profesor_id));
     if (filtros.profesor_nombre) params = params.set('profesor_nombre', filtros.profesor_nombre);
     if (filtros.dia)             params = params.set('dia', filtros.dia);
     if (filtros.grupo)           params = params.set('grupo', filtros.grupo);
+    if (filtros.asignatura)      params = params.set('asignatura', filtros.asignatura);
     if (filtros.aula)            params = params.set('aula', filtros.aula);
     return this.http
       .get<PaginatedResponse<HorarioEntry>>(`${this.url}/`, { params })

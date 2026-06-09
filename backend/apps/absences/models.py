@@ -19,6 +19,7 @@ class Ausencia(models.Model):
 
     fecha = models.DateField()
     descripcion = models.TextField(blank=True, default='')
+    tareas = models.TextField(blank=True, default='')
     justificada = models.BooleanField(default=False)
     horario_entry = models.ForeignKey(
         HorarioEntry,

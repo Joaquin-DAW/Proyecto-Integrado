@@ -12,12 +12,12 @@ from celery import shared_task
 @shared_task(name='reports.generar_partes_diarios')
 def generar_partes_diarios():
     """
-    Genera los partes A y B para el dia actual.
+    Genera el parte comun del dia actual y lo envia a direccion.
 
     El import queda dentro de la funcion para que Celery arranque sin pelearse
     con las importaciones de Django.
     """
-    from .services import generar_partes_del_dia
+    from .services import enviar_parte_a_equipo_directivo, generar_partes_del_dia
 
     hoy = datetime.date.today()
 
@@ -26,4 +26,5 @@ def generar_partes_diarios():
         return f'Fin de semana ({hoy}) — tarea omitida.'
 
     partes = generar_partes_del_dia(hoy)
-    return f'Partes generados para {hoy}: {[str(p) for p in partes]}'
+    enviados = sum(enviar_parte_a_equipo_directivo(parte) for parte in partes)
+    return f'Parte comun generado para {hoy} y enviado a {enviados} destinatario(s).'

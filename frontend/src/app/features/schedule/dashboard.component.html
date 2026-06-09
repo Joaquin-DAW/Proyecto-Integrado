@@ -1,6 +1,35 @@
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <h5 class="mb-0">Mi Horario</h5>
-</div>
+@if (isDireccion) {
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h5 class="mb-0">Panel diario de ausencias</h5>
+    <div class="d-flex flex-wrap align-items-center gap-2">
+      @if (ultimaActualizacion) {
+        <span class="small text-muted">Actualizado {{ ultimaActualizacion }}</span>
+      }
+      <label for="fechaPanel" class="form-label small text-muted mb-0">Fecha</label>
+      <input
+        id="fechaPanel"
+        type="date"
+        class="form-control form-control-sm"
+        style="width: 170px"
+        [(ngModel)]="fechaPanel"
+        (change)="cambiarFechaPanel()"
+      />
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-primary"
+        [disabled]="refreshing"
+        (click)="cargarPanel(false)"
+      >
+        @if (refreshing) { <span class="spinner-border spinner-border-sm me-1"></span> }
+        Actualizar
+      </button>
+    </div>
+  </div>
+} @else {
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0">Mi Horario</h5>
+  </div>
+}
 
 @if (loading) {
   <div class="text-center py-5">
@@ -8,6 +37,113 @@
   </div>
 } @else if (error) {
   <div class="alert alert-danger">{{ error }}</div>
+} @else if (isDireccion && panel) {
+  @if (panel.dia === null) {
+    <div class="alert alert-info">La fecha seleccionada no es lectiva.</div>
+  }
+
+  <div class="row g-2 mb-3">
+    <div class="col-6 col-lg-3">
+      <div class="border rounded p-2 bg-light h-100">
+        <div class="small text-muted">Ausencias</div>
+        <div class="fs-5 fw-semibold">{{ panel.resumen.total_ausencias }}</div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="border rounded p-2 bg-light h-100">
+        <div class="small text-muted">Guardias</div>
+        <div class="fs-5 fw-semibold">{{ panel.resumen.guardias_total }}</div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="border rounded p-2 bg-light h-100">
+        <div class="small text-muted">Disponibles</div>
+        <div class="fs-5 fw-semibold text-success">{{ panel.resumen.guardias_disponibles }}</div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="border rounded p-2 bg-light h-100">
+        <div class="small text-muted">Guardias ausentes</div>
+        <div class="fs-5 fw-semibold text-danger">{{ panel.resumen.guardias_ausentes }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-bordered table-sm align-middle">
+      <thead class="table-primary">
+        <tr>
+          <th style="width: 70px">Hora</th>
+          <th>Profesorado de guardia</th>
+          <th>Ausencias</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (hora of horas; track hora) {
+          @let guardias = guardiasPorHora(hora);
+          @let ausencias = ausenciasPorHora(hora);
+          <tr [class.table-secondary]="recreos.has(hora)">
+            <td class="fw-semibold text-center">{{ hora }}</td>
+            <td>
+              @if (guardias.length) {
+                @for (guardia of guardias; track guardia.id; let last = $last) {
+                  <div class="py-1" [class.border-bottom]="!last">
+                    <div
+                      class="d-flex flex-wrap align-items-center gap-2"
+                      [class.text-muted]="guardia.ausente"
+                      [class.text-decoration-line-through]="guardia.ausente"
+                    >
+                      <span class="fw-semibold">{{ guardia.profesor_nombre }}</span>
+                      <span class="badge" [ngClass]="moduloClass(guardia.modulo)">
+                        {{ guardia.modulo === 'General' ? 'General' : 'Módulo ' + guardia.modulo }}
+                      </span>
+                      @if (guardia.tipo) {
+                        <span class="small text-muted">{{ guardia.tipo }}</span>
+                      }
+                      @if (guardia.aula) {
+                        <span class="badge bg-secondary-subtle text-secondary border">Aula {{ guardia.aula }}</span>
+                      }
+                    </div>
+                  </div>
+                }
+              } @else {
+                <span class="small text-muted">Sin guardias en este tramo</span>
+              }
+            </td>
+            <td>
+              @if (ausencias.length) {
+                @for (ausencia of ausencias; track ausencia.id; let last = $last) {
+                  <div class="py-1" [class.border-bottom]="!last">
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                      <span class="fw-semibold">{{ ausencia.profesor_nombre }}</span>
+                      @if (ausencia.justificada) {
+                        <span class="badge bg-success-subtle text-success border">Justificada</span>
+                      } @else {
+                        <span class="badge bg-warning-subtle text-warning border">Pendiente</span>
+                      }
+                    </div>
+                    <div class="small text-muted">
+                      {{ ausencia.asignatura }}
+                      @if (ausencia.aula) {
+                        <span>- Aula {{ ausencia.aula }}</span>
+                      }
+                    </div>
+                    @if (ausencia.tareas) {
+                      <div class="small text-primary">
+                        Tareas: {{ ausencia.tareas }}
+                      </div>
+                    }
+                  </div>
+                }
+              } @else {
+                <span class="small text-muted">Sin ausencias en este tramo</span>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
 } @else {
   <div class="table-responsive">
     <table class="table table-bordered table-sm text-center align-middle">

@@ -14,7 +14,9 @@
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav me-auto">
         <li class="nav-item">
-          <a class="nav-link" routerLink="/dashboard" routerLinkActive="active">Mi Horario</a>
+          <a class="nav-link" routerLink="/dashboard" routerLinkActive="active">
+            {{ auth.isEquipoDireccion() ? 'Panel diario' : 'Mi Horario' }}
+          </a>
         </li>
         @if (!auth.isEquipoDireccion()) {
           <li class="nav-item">

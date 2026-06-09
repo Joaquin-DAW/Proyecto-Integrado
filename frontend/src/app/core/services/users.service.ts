@@ -24,6 +24,13 @@ export class UsersService {
     return this.http.delete(`${this.url}/${userId}/eliminar/`);
   }
 
+  actualizarUsuario(
+    userId: number,
+    data: { email: string; role: Usuario['role']; is_active: boolean },
+  ) {
+    return this.http.patch<Usuario>(`${this.url}/${userId}/`, data);
+  }
+
   cambiarPassword(passwordActual: string, nuevaPassword: string) {
     return this.http.post(`${this.url}/me/cambiar-password/`, {
       password_actual: passwordActual,

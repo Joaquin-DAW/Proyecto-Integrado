@@ -53,6 +53,16 @@
           ></textarea>
         </div>
 
+        <div class="mb-3">
+          <label class="form-label">Tareas para la guardia (opcional)</label>
+          <textarea
+            class="form-control"
+            rows="3"
+            [(ngModel)]="form.tareas"
+            placeholder="Trabajo que debe realizar el alumnado..."
+          ></textarea>
+        </div>
+
         @if (error) {
           <div class="alert alert-danger py-2 small">{{ error }}</div>
         }
@@ -102,12 +112,15 @@
               <tbody>
                 @for (a of ausencias; track a.id) {
                   <tr>
-                    <td>{{ a.fecha }}</td>
+                    <td>{{ a.fecha | date: 'dd/MM/yyyy' }}</td>
                     <td>{{ a.hora }}ª</td>
                     <td>
                       <div>{{ a.asignatura }}</div>
                       @if (a.descripcion) {
-                        <small class="text-muted">{{ a.descripcion }}</small>
+                        <small class="text-muted d-block">{{ a.descripcion }}</small>
+                      }
+                      @if (a.tareas) {
+                        <small class="text-primary d-block">Tareas: {{ a.tareas }}</small>
                       }
                     </td>
                     <td>

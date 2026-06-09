@@ -28,7 +28,7 @@ export class ResetPasswordComponent implements OnInit {
     this.uid = this.route.snapshot.queryParamMap.get('uid') ?? '';
     this.token = this.route.snapshot.queryParamMap.get('token') ?? '';
     if (!this.uid || !this.token) {
-      this.error = 'El enlace de recuperacion no es valido.';
+      this.error = 'El enlace de recuperación no es válido.';
     }
   }
 

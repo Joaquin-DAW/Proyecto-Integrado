@@ -1,27 +1,131 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
-  <h5 class="mb-0">Gestión de Ausencias</h5>
+  <h5 class="mb-0">Gestión de ausencias</h5>
 </div>
 
-<!-- Filtro sencillo para revisar un dia concreto sin perder el listado general. -->
-<div class="card shadow-sm mb-3">
-  <div class="card-body py-2">
-    <div class="row g-2 align-items-end">
-      <div class="col-auto">
-        <label class="form-label mb-1 small">Filtrar por fecha</label>
-        <input
-          type="date"
-          class="form-control form-control-sm"
-          [(ngModel)]="filtroFecha"
-          (ngModelChange)="cargar()"
-        />
+<div class="row g-3 mb-3">
+  <div class="col-12 col-xl-5">
+    <div class="card shadow-sm h-100">
+      <div class="card-header">
+        <h6 class="mb-0">Registrar ausencia</h6>
       </div>
-      @if (filtroFecha) {
-        <div class="col-auto">
-          <button class="btn btn-sm btn-outline-secondary" (click)="limpiarFiltro()">
-            Limpiar filtro
-          </button>
+      <div class="card-body">
+        <div class="mb-3">
+          <label class="form-label">Profesor/a</label>
+          <select
+            class="form-select"
+            [(ngModel)]="form.profesorId"
+            (ngModelChange)="cargarHorarioProfesor()"
+          >
+            <option [ngValue]="null">Selecciona un profesor...</option>
+            @for (profesor of profesores; track profesor.id) {
+              <option [ngValue]="profesor.id">{{ profesor.nombre }}</option>
+            }
+          </select>
         </div>
-      }
+
+        <div class="mb-3">
+          <label class="form-label">Fecha</label>
+          <input
+            type="date"
+            class="form-control"
+            [(ngModel)]="form.fecha"
+            (ngModelChange)="cargarHorarioProfesor()"
+          />
+        </div>
+
+        @if (cargandoHorario) {
+          <div class="text-center py-2">
+            <span class="spinner-border spinner-border-sm text-primary"></span>
+          </div>
+        } @else if (form.profesorId && form.fecha && tramosProfesor.length === 0) {
+          <div class="alert alert-warning small py-2">
+            Ese profesor no tiene tramos lectivos ese día.
+          </div>
+        }
+
+        @if (tramosProfesor.length > 0) {
+          <div class="mb-3">
+            <label class="form-label">Tramos</label>
+            <div class="d-flex flex-wrap gap-2">
+              @for (tramo of tramosProfesor; track tramo.hora) {
+                <button
+                  type="button"
+                  class="btn btn-sm text-start"
+                  [class.btn-primary]="isHoraSeleccionada(tramo.hora)"
+                  [class.btn-outline-secondary]="!isHoraSeleccionada(tramo.hora)"
+                  (click)="toggleHora(tramo.hora)"
+                >
+                  {{ tramo.label }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+
+        <div class="mb-3">
+          <label class="form-label">Descripción</label>
+          <textarea
+            class="form-control"
+            rows="2"
+            [(ngModel)]="form.descripcion"
+            placeholder="Motivo o anotación interna..."
+          ></textarea>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Tareas para la guardia</label>
+          <textarea
+            class="form-control"
+            rows="3"
+            [(ngModel)]="form.tareas"
+            placeholder="Trabajo que debe hacer el alumnado..."
+          ></textarea>
+        </div>
+
+        @if (exito) {
+          <div class="alert alert-success py-2 small">{{ exito }}</div>
+        }
+        @if (error) {
+          <div class="alert alert-danger py-2 small">{{ error }}</div>
+        }
+
+        <button
+          class="btn btn-primary w-100"
+          [disabled]="guardando || !form.profesorId || !form.fecha || form.horas.length === 0"
+          (click)="registrarAusencia()"
+        >
+          @if (guardando) { <span class="spinner-border spinner-border-sm me-1"></span> }
+          Registrar ausencia
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-xl-7">
+    <div class="card shadow-sm h-100">
+      <div class="card-header">
+        <h6 class="mb-0">Filtro</h6>
+      </div>
+      <div class="card-body">
+        <div class="row g-2 align-items-end">
+          <div class="col-auto">
+            <label class="form-label mb-1 small">Filtrar por fecha</label>
+            <input
+              type="date"
+              class="form-control form-control-sm"
+              [(ngModel)]="filtroFecha"
+              (ngModelChange)="cargar()"
+            />
+          </div>
+          @if (filtroFecha) {
+            <div class="col-auto">
+              <button class="btn btn-sm btn-outline-secondary" (click)="limpiarFiltro()">
+                Limpiar filtro
+              </button>
+            </div>
+          }
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -32,8 +136,6 @@
       <div class="text-center py-4">
         <div class="spinner-border text-primary"></div>
       </div>
-    } @else if (error) {
-      <div class="alert alert-danger m-3">{{ error }}</div>
     } @else if (ausencias.length === 0) {
       <p class="text-muted text-center py-4 mb-0">No hay ausencias registradas.</p>
     } @else {
@@ -46,7 +148,7 @@
               <th>Hora</th>
               <th>Asignatura</th>
               <th>Aula</th>
-              <th>Descripción</th>
+              <th>Notas</th>
               <th>Estado</th>
               <th>Acciones</th>
             </tr>
@@ -54,12 +156,22 @@
           <tbody>
             @for (a of ausencias; track a.id) {
               <tr>
-                <td class="text-nowrap">{{ a.fecha }}</td>
+                <td class="text-nowrap">{{ a.fecha | date: 'dd/MM/yyyy' }}</td>
                 <td class="small">{{ a.profesor_nombre }}</td>
-                <td class="text-center">{{ a.hora }}ª</td>
+                <td class="text-center">{{ a.hora }}</td>
                 <td>{{ a.asignatura }}</td>
-                <td>{{ a.aula || '—' }}</td>
-                <td class="small text-muted">{{ a.descripcion || '—' }}</td>
+                <td>{{ a.aula || '-' }}</td>
+                <td class="small">
+                  @if (a.descripcion) {
+                    <div class="text-muted">{{ a.descripcion }}</div>
+                  }
+                  @if (a.tareas) {
+                    <div class="text-primary">Tareas: {{ a.tareas }}</div>
+                  }
+                  @if (!a.descripcion && !a.tareas) {
+                    <span class="text-muted">-</span>
+                  }
+                </td>
                 <td>
                   <button
                     class="btn btn-sm"

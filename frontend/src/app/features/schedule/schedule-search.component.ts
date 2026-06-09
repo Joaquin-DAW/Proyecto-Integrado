@@ -20,7 +20,13 @@ const DIAS = [
 })
 export class ScheduleSearchComponent {
   dias = DIAS;
-  filtros: FiltrosHorario = { profesor_nombre: '', dia: '', grupo: '', aula: '' };
+  filtros: FiltrosHorario = {
+    profesor_nombre: '',
+    dia: '',
+    grupo: '',
+    asignatura: '',
+    aula: '',
+  };
 
   resultados: HorarioEntry[] = [];
   loading = false;
@@ -31,7 +37,7 @@ export class ScheduleSearchComponent {
 
   buscar() {
     // Sin ningun filtro la consulta devolveria demasiado horario de golpe.
-    const hayFiltro = Object.values(this.filtros).some(v => v && v.trim());
+    const hayFiltro = Object.values(this.filtros).some(v => String(v ?? '').trim());
     if (!hayFiltro) return;
 
     this.loading = true;
@@ -52,7 +58,13 @@ export class ScheduleSearchComponent {
   }
 
   limpiar() {
-    this.filtros = { profesor_nombre: '', dia: '', grupo: '', aula: '' };
+    this.filtros = {
+      profesor_nombre: '',
+      dia: '',
+      grupo: '',
+      asignatura: '',
+      aula: '',
+    };
     this.resultados = [];
     this.buscado = false;
   }

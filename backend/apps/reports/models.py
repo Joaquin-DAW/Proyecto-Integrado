@@ -1,7 +1,7 @@
 """
 Partes de ausencias generados por el sistema.
 
-Cada parte corresponde a una fecha y a un modulo del centro. El PDF se guarda
+Cada parte corresponde a una fecha y a un ambito del centro. El PDF se guarda
 en media para poder descargarlo o enviarlo despues sin tener que recalcularlo.
 """
 from django.db import models
@@ -15,12 +15,14 @@ class ParteAusencias(models.Model):
     de abrirlo cuando se descarga desde la API.
     """
 
+    GENERAL = 'G'
     MODULO_A = 'A'
     MODULO_B = 'B'
 
     TIPO_CHOICES = [
-        (MODULO_A, 'Módulo A'),
-        (MODULO_B, 'Módulo B'),
+        (GENERAL, 'IES completo'),
+        (MODULO_A, 'Modulo A'),
+        (MODULO_B, 'Modulo B'),
     ]
 
     fecha = models.DateField()
@@ -35,4 +37,4 @@ class ParteAusencias(models.Model):
         unique_together = [('fecha', 'tipo')]
 
     def __str__(self):
-        return f"Parte {self.get_tipo_display()} — {self.fecha}"
+        return f"Parte {self.get_tipo_display()} - {self.fecha}"

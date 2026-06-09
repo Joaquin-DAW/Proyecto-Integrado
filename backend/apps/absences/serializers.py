@@ -17,7 +17,7 @@ class AusenciaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ausencia
         fields = (
-            'id', 'fecha', 'descripcion', 'justificada', 'creada_en',
+            'id', 'fecha', 'descripcion', 'tareas', 'justificada', 'creada_en',
             'horario_entry', 'profesor_nombre', 'asignatura', 'aula', 'hora', 'dia',
         )
         read_only_fields = ('id', 'creada_en', 'justificada')
@@ -35,6 +35,7 @@ class CreateAusenciaSerializer(serializers.Serializer):
         "fecha": "2026-04-23",
         "horas": [1, 2, 3],
         "descripcion": "Baja médica",
+        "tareas": "Ejercicios 1 y 2 de la pagina 45",
         "profesor_id": 5   ← solo si lo envía el Equipo Directivo
       }
     """
@@ -44,6 +45,7 @@ class CreateAusenciaSerializer(serializers.Serializer):
         min_length=1,
     )
     descripcion = serializers.CharField(required=False, default='', allow_blank=True)
+    tareas = serializers.CharField(required=False, default='', allow_blank=True)
     profesor_id = serializers.IntegerField(required=False)
 
     def validate_horas(self, value):

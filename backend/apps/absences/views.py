@@ -17,6 +17,31 @@ def _get_dia_semana(fecha: datetime.date) -> str:
     return DIAS.get(fecha.weekday())
 
 
+def _modulo_de_guardia(entry: HorarioEntry) -> str:
+    """
+    Calcula el edificio/modulo de una guardia con los datos del horario.
+
+    En el TXT algunas guardias vienen como GUARDIA A o GUARDIA B en el campo
+    curso. Para el resto se usa el criterio comentado por el tutor: aulas que
+    empiezan por 1 son modulo A y las que empiezan por 2 modulo B.
+    """
+    curso = (entry.curso or '').upper()
+    texto_guardia = f"{entry.asignatura or ''} {curso}".upper()
+    aula = (entry.aula or '').strip()
+
+    if 'BIBLIOTECA' in texto_guardia:
+        return 'A'
+    if 'GUARDIA A' in curso:
+        return 'A'
+    if 'GUARDIA B' in curso:
+        return 'B'
+    if aula.startswith('1'):
+        return 'A'
+    if aula.startswith('2'):
+        return 'B'
+    return 'General'
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def listar_ausencias(request):
@@ -52,6 +77,74 @@ def listar_ausencias(request):
     return Response(AusenciaSerializer(qs, many=True).data)
 
 
+@api_view(['GET'])
+@permission_classes([IsEquipoDireccion])
+def panel_diario(request):
+    """
+    Resumen para la pantalla inicial de direccion.
+
+    Junta las ausencias del dia con el profesorado de guardia. Si un profesor de
+    guardia tambien esta ausente, se marca para que el panel pueda tacharlo.
+    """
+    fecha_raw = request.query_params.get('fecha')
+    try:
+        fecha = (
+            datetime.date.fromisoformat(fecha_raw)
+            if fecha_raw
+            else datetime.date.today()
+        )
+    except ValueError:
+        return Response(
+            {'error': 'La fecha debe tener formato AAAA-MM-DD.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    dia = _get_dia_semana(fecha)
+    ausencias_qs = Ausencia.objects.filter(fecha=fecha).select_related(
+        'horario_entry__profesor'
+    ).order_by('horario_entry__hora', 'horario_entry__profesor__nombre')
+
+    profesores_ausentes = {
+        ausencia.horario_entry.profesor_id for ausencia in ausencias_qs
+    }
+
+    guardias = []
+    if dia is not None:
+        guardias_qs = HorarioEntry.objects.filter(
+            dia=dia,
+            asignatura__istartswith='guardia',
+        ).select_related('profesor').order_by(
+            'hora',
+            'curso',
+            'profesor__nombre',
+        )
+
+        for guardia in guardias_qs:
+            guardias.append({
+                'id': guardia.id,
+                'hora': guardia.hora,
+                'profesor_id': guardia.profesor_id,
+                'profesor_nombre': guardia.profesor.nombre,
+                'tipo': guardia.curso or guardia.asignatura,
+                'aula': guardia.aula,
+                'modulo': _modulo_de_guardia(guardia),
+                'ausente': guardia.profesor_id in profesores_ausentes,
+            })
+
+    return Response({
+        'fecha': fecha.isoformat(),
+        'dia': dia,
+        'ausencias': AusenciaSerializer(ausencias_qs, many=True).data,
+        'guardias': guardias,
+        'resumen': {
+            'total_ausencias': ausencias_qs.count(),
+            'guardias_total': len(guardias),
+            'guardias_disponibles': len([g for g in guardias if not g['ausente']]),
+            'guardias_ausentes': len([g for g in guardias if g['ausente']]),
+        },
+    })
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def crear_ausencia(request):
@@ -71,6 +164,7 @@ def crear_ausencia(request):
     fecha = serializer.validated_data['fecha']
     horas = serializer.validated_data['horas']
     descripcion = serializer.validated_data.get('descripcion', '')
+    tareas = serializer.validated_data.get('tareas', '')
 
     # Direccion puede registrar ausencias de otros; el profesorado queda limitado a si mismo.
     if request.user.is_equipo_directivo and serializer.validated_data.get('profesor_id'):
@@ -110,7 +204,7 @@ def crear_ausencia(request):
             ausencia, created = Ausencia.objects.get_or_create(
                 fecha=fecha,
                 horario_entry=entry,
-                defaults={'descripcion': descripcion},
+                defaults={'descripcion': descripcion, 'tareas': tareas},
             )
             if created:
                 creadas.append(AusenciaSerializer(ausencia).data)

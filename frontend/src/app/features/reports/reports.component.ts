@@ -18,7 +18,7 @@ export class ReportsComponent implements OnInit {
   error = '';
   exito = '';
 
-  form = { fecha: '', tipo: 'A' as 'A' | 'B' };
+  form = { fecha: '', tipo: 'G' as ParteAusencias['tipo'] };
 
   constructor(private reportsService: ReportsService) {}
 
@@ -48,15 +48,26 @@ export class ReportsComponent implements OnInit {
 
     this.reportsService.generar(this.form.fecha, this.form.tipo).subscribe({
       next: () => {
-        this.exito = `Parte Módulo ${this.form.tipo} generado correctamente.`;
+        this.exito = `Parte ${this.tipoLabel(this.form.tipo)} generado correctamente.`;
         this.generando = false;
         this.cargar();
       },
-      error: (err) => {
+      error: err => {
         this.error = err?.error?.error ?? 'Error al generar el parte.';
         this.generando = false;
       },
     });
+  }
+
+  tipoLabel(tipo: ParteAusencias['tipo']) {
+    if (tipo === 'G') return 'IES completo';
+    return `Módulo ${tipo}`;
+  }
+
+  tipoBadgeClass(tipo: ParteAusencias['tipo']) {
+    if (tipo === 'G') return 'bg-dark';
+    if (tipo === 'A') return 'bg-primary';
+    return 'bg-info';
   }
 
   enviar(parte: ParteAusencias) {
@@ -69,7 +80,7 @@ export class ReportsComponent implements OnInit {
         this.exito = res.mensaje;
         this.enviandoId = null;
       },
-      error: (err) => {
+      error: err => {
         this.error = err?.error?.error ?? 'Error al enviar el parte por email.';
         this.enviandoId = null;
       },

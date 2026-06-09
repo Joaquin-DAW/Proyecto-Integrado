@@ -1,59 +1,145 @@
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <h5 class="mb-0">Gestión de Usuarios</h5>
-  <span class="text-muted small">{{ profesores.length }} profesores en total</span>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <h5 class="mb-0">Gestión de usuarios</h5>
+  <div class="d-flex flex-wrap gap-2">
+    <span class="badge bg-secondary">{{ profesores.length }} profesores</span>
+    <span class="badge bg-success">{{ totalConCuenta }} cuentas</span>
+    <span class="badge bg-primary">{{ totalDirectivos }} directivos</span>
+  </div>
 </div>
 
-<!-- Buscador rapido por nombre del profesor. -->
-<div class="mb-3">
-  <input
-    type="text"
-    class="form-control"
-    placeholder="Buscar por nombre..."
-    [(ngModel)]="filtroBusqueda"
-  />
+<div class="card shadow-sm mb-3">
+  <div class="card-body py-2">
+    <div class="row g-2 align-items-end">
+      <div class="col-12 col-lg-6">
+        <label class="form-label mb-1 small">Buscar</label>
+        <input
+          type="text"
+          class="form-control form-control-sm"
+          placeholder="Nombre o email..."
+          [(ngModel)]="filtroBusqueda"
+        />
+      </div>
+      <div class="col-12 col-sm-6 col-lg-3">
+        <label class="form-label mb-1 small">Estado</label>
+        <select class="form-select form-select-sm" [(ngModel)]="filtroEstado">
+          <option value="TODOS">Todos</option>
+          <option value="CON_CUENTA">Con cuenta</option>
+          <option value="SIN_CUENTA">Sin cuenta</option>
+          <option value="DIRECTIVO">Equipo directivo</option>
+        </select>
+      </div>
+      <div class="col-12 col-sm-6 col-lg-3">
+        <button class="btn btn-sm btn-outline-secondary w-100" (click)="cargar()" [disabled]="loading">
+          Recargar
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
+
+@if (error) {
+  <div class="alert alert-danger py-2">{{ error }}</div>
+}
+@if (exito) {
+  <div class="alert alert-success py-2">{{ exito }}</div>
+}
 
 @if (loading) {
   <div class="text-center py-4">
     <div class="spinner-border text-primary"></div>
   </div>
-} @else if (error) {
-  <div class="alert alert-danger">{{ error }}</div>
 } @else {
   <div class="card shadow-sm">
     <div class="card-body p-0">
       <div class="table-responsive">
-        <table class="table table-hover mb-0">
+        <table class="table table-hover align-middle mb-0">
           <thead class="table-light">
             <tr>
-              <th>Nombre</th>
-              <th>Email generado</th>
-              <th>Estado</th>
-              <th>Acción</th>
+              <th>Profesor/a</th>
+              <th>Email</th>
+              <th style="width: 185px">Rol</th>
+              <th style="width: 120px">Acceso</th>
+              <th style="width: 230px">Acciones</th>
             </tr>
           </thead>
           <tbody>
             @for (p of profesoresFiltrados; track p.id) {
               <tr>
-                <td>{{ p.nombre }}</td>
-                <td class="small text-muted">{{ p.email_institucional }}</td>
                 <td>
-                  @if (p.tiene_cuenta) {
-                    <span class="badge bg-success">Con cuenta</span>
-                  } @else {
-                    <span class="badge bg-secondary">Sin cuenta</span>
-                  }
+                  <div class="fw-semibold">{{ p.nombre }}</div>
+                  <div class="small text-muted">{{ p.email_institucional }}</div>
                 </td>
-                <td>
-                  @if (!p.tiene_cuenta) {
-                    <button
-                      class="btn btn-sm btn-outline-primary"
-                      (click)="crearCuenta(p)"
+
+                @if (p.user; as user) {
+                  <td>
+                    <input
+                      type="email"
+                      class="form-control form-control-sm"
+                      [(ngModel)]="drafts[user.id].email"
+                    />
+                  </td>
+                  <td>
+                    <select
+                      class="form-select form-select-sm"
+                      [(ngModel)]="drafts[user.id].role"
+                      [disabled]="esUsuarioActual(p)"
                     >
+                      <option value="PROFESORADO">Profesorado</option>
+                      <option value="EQUIPO_DIRECTIVO">Equipo directivo</option>
+                    </select>
+                  </td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        role="switch"
+                        [id]="'activo-' + user.id"
+                        [(ngModel)]="drafts[user.id].is_active"
+                        [disabled]="esUsuarioActual(p)"
+                      />
+                      <label class="form-check-label small" [for]="'activo-' + user.id">
+                        {{ drafts[user.id].is_active ? 'Activo' : 'Inactivo' }}
+                      </label>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="d-flex flex-wrap gap-2">
+                      <button
+                        class="btn btn-sm btn-primary"
+                        [disabled]="!haCambiado(p) || guardandoId === user.id"
+                        (click)="guardarCuenta(p)"
+                      >
+                        @if (guardandoId === user.id) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                        Guardar
+                      </button>
+                      <button
+                        class="btn btn-sm btn-outline-danger"
+                        [disabled]="esUsuarioActual(p) || eliminandoId === user.id"
+                        (click)="eliminarCuenta(p)"
+                      >
+                        @if (eliminandoId === user.id) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                        Eliminar
+                      </button>
+                    </div>
+                    @if (esUsuarioActual(p)) {
+                      <div class="small text-muted mt-1">Tu cuenta actual</div>
+                    }
+                  </td>
+                } @else {
+                  <td class="small text-muted">{{ p.email_institucional }}</td>
+                  <td><span class="badge bg-secondary">Sin cuenta</span></td>
+                  <td><span class="text-muted small">-</span></td>
+                  <td>
+                    <button class="btn btn-sm btn-outline-primary" (click)="crearCuenta(p)">
                       Crear cuenta
                     </button>
-                  }
-                </td>
+                  </td>
+                }
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="text-center text-muted py-4">No hay profesores con esos filtros.</td>
               </tr>
             }
           </tbody>
@@ -63,7 +149,6 @@
   </div>
 }
 
-<!-- Aviso con las credenciales recien creadas. La password no se vuelve a enseñar. -->
 @if (credencialesNuevas) {
   <div class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,0.5)">
     <div class="modal-dialog modal-dialog-centered">
@@ -78,15 +163,11 @@
           </p>
           <div class="mb-2">
             <label class="form-label small fw-semibold">Email</label>
-            <div class="input-group">
-              <input type="text" class="form-control" [value]="credencialesNuevas.email" readonly />
-            </div>
+            <input type="text" class="form-control" [value]="credencialesNuevas.email" readonly />
           </div>
           <div class="mb-2">
             <label class="form-label small fw-semibold">Contraseña temporal</label>
-            <div class="input-group">
-              <input type="text" class="form-control font-monospace" [value]="credencialesNuevas.password" readonly />
-            </div>
+            <input type="text" class="form-control font-monospace" [value]="credencialesNuevas.password" readonly />
           </div>
           <div class="alert alert-warning small py-2 mt-3 mb-0">
             Anota la contraseña ahora. No volverá a mostrarse.

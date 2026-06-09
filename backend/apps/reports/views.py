@@ -1,5 +1,4 @@
 import datetime
-from django.core.mail import EmailMessage
 from django.http import FileResponse
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -9,7 +8,7 @@ from rest_framework import serializers
 
 from apps.users.permissions import IsEquipoDireccion
 from .models import ParteAusencias
-from .services import generar_y_guardar_parte
+from .services import TIPOS_PARTE, enviar_parte_a_equipo_directivo, generar_y_guardar_parte
 
 
 class ParteSerializer(serializers.ModelSerializer):
@@ -31,9 +30,9 @@ class ParteSerializer(serializers.ModelSerializer):
 @permission_classes([IsAuthenticated])
 def listar_partes(request):
     """
-    Lista los partes generados, con filtros simples para buscar por dia o modulo:
+    Lista los partes generados, con filtros simples para buscar por dia o tipo:
       ?fecha=2026-04-23
-      ?tipo=A|B
+      ?tipo=G|A|B
     """
     qs = ParteAusencias.objects.order_by('-fecha', 'tipo')
 
@@ -49,20 +48,20 @@ def listar_partes(request):
 @permission_classes([IsEquipoDireccion])
 def generar_parte(request):
     """
-    Genera un parte bajo demanda para una fecha y modulo.
+    Genera un parte bajo demanda para una fecha y tipo.
 
     Si ya habia uno igual, se pisa el PDF anterior con la version nueva.
 
     Body:
-      { "fecha": "2026-04-23", "tipo": "A" }
+      { "fecha": "2026-04-23", "tipo": "G" }
     """
     fecha_str = request.data.get('fecha')
     tipo = request.data.get('tipo', '').upper()
 
     if not fecha_str:
         return Response({'error': 'El campo fecha es obligatorio.'}, status=status.HTTP_400_BAD_REQUEST)
-    if tipo not in ('A', 'B'):
-        return Response({'error': "El campo tipo debe ser 'A' o 'B'."}, status=status.HTTP_400_BAD_REQUEST)
+    if tipo not in TIPOS_PARTE:
+        return Response({'error': "El campo tipo debe ser 'G', 'A' o 'B'."}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         fecha = datetime.date.fromisoformat(fecha_str)
@@ -106,7 +105,7 @@ def descargar_parte(request, parte_id):
 @permission_classes([IsEquipoDireccion])
 def enviar_parte_email(request, parte_id):
     """
-    Envia el PDF al correo del usuario de direccion que esta autenticado.
+    Envia el PDF a todos los usuarios activos del equipo directivo.
     """
     try:
         parte = ParteAusencias.objects.get(pk=parte_id)
@@ -116,15 +115,9 @@ def enviar_parte_email(request, parte_id):
     if not parte.pdf_file:
         return Response({'error': 'Este parte aun no tiene PDF generado.'}, status=status.HTTP_404_NOT_FOUND)
 
-    email = EmailMessage(
-        subject=f'Parte de ausencias {parte.fecha} - Modulo {parte.tipo}',
-        body=(
-            f'Adjuntamos el parte de ausencias del {parte.fecha} '
-            f'correspondiente al Modulo {parte.tipo}.'
-        ),
-        to=[request.user.email],
-    )
-    email.attach_file(parte.pdf_file.path)
-    email.send(fail_silently=False)
+    enviados = enviar_parte_a_equipo_directivo(parte)
 
-    return Response({'mensaje': f'Parte enviado a {request.user.email}.'})
+    if enviados == 0:
+        return Response({'mensaje': 'No hay destinatarios activos de equipo directivo.'})
+
+    return Response({'mensaje': f'Parte enviado a {enviados} miembro(s) del equipo directivo.'})

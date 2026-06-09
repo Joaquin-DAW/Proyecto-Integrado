@@ -18,6 +18,8 @@ class HorarioListView(generics.ListAPIView):
       ?profesor_id=5
       ?dia=L
       ?hora=3
+      ?grupo=1ESO
+      ?asignatura=Lengua
 
     El profesorado puede ver el horario completo porque para las guardias y
     consultas internas hace falta saber quien esta en cada tramo.
@@ -39,6 +41,8 @@ class HorarioListView(generics.ListAPIView):
             qs = qs.filter(hora=p['hora'])
         if p.get('grupo'):
             qs = qs.filter(curso__icontains=p['grupo'])
+        if p.get('asignatura'):
+            qs = qs.filter(asignatura__icontains=p['asignatura'])
         if p.get('aula'):
             qs = qs.filter(aula__icontains=p['aula'])
 

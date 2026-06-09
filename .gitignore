@@ -1,5 +1,7 @@
 # Entorno local
 .env
+.env.aws
+.env.production
 .env.local
 .env.*.local
 

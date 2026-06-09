@@ -31,10 +31,11 @@ class ProfesorListSerializer(serializers.ModelSerializer):
 
     tiene_cuenta = serializers.BooleanField(source='user', read_only=True)
     email_institucional = serializers.SerializerMethodField()
+    user = UserSerializer(read_only=True)
 
     class Meta:
         model = Profesor
-        fields = ('id', 'nombre', 'tiene_cuenta', 'email_institucional')
+        fields = ('id', 'nombre', 'tiene_cuenta', 'email_institucional', 'user')
 
     def get_email_institucional(self, obj):
         return Profesor.generar_email(obj.nombre)

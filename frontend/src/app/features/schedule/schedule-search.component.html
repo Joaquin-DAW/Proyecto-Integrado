@@ -7,7 +7,7 @@
   <div class="card-body">
     <div class="row g-2 align-items-end">
 
-      <div class="col-12 col-md-3">
+      <div class="col-12 col-md-4 col-xl-3">
         <label class="form-label small">Profesor</label>
         <input
           type="text"
@@ -18,7 +18,7 @@
         />
       </div>
 
-      <div class="col-6 col-md-2">
+      <div class="col-6 col-md-2 col-xl-1">
         <label class="form-label small">Día</label>
         <select class="form-select form-select-sm" [(ngModel)]="filtros.dia">
           <option value="">Todos</option>
@@ -28,8 +28,8 @@
         </select>
       </div>
 
-      <div class="col-6 col-md-3">
-        <label class="form-label small">Grupo / Asignatura</label>
+      <div class="col-6 col-md-3 col-xl-2">
+        <label class="form-label small">Grupo</label>
         <input
           type="text"
           class="form-control form-control-sm"
@@ -39,7 +39,18 @@
         />
       </div>
 
-      <div class="col-6 col-md-2">
+      <div class="col-12 col-md-3 col-xl-3">
+        <label class="form-label small">Asignatura</label>
+        <input
+          type="text"
+          class="form-control form-control-sm"
+          placeholder="ej: Lengua, Guardia..."
+          [(ngModel)]="filtros.asignatura"
+          (keyup.enter)="buscar()"
+        />
+      </div>
+
+      <div class="col-6 col-md-2 col-xl-1">
         <label class="form-label small">Aula</label>
         <input
           type="text"
@@ -50,7 +61,7 @@
         />
       </div>
 
-      <div class="col-6 col-md-2 d-flex gap-2">
+      <div class="col-6 col-md-4 col-xl-2 d-flex gap-2">
         <button class="btn btn-primary btn-sm w-100" (click)="buscar()" [disabled]="loading">
           @if (loading) { <span class="spinner-border spinner-border-sm me-1"></span> }
           Buscar

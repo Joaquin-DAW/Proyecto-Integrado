@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-import { Ausencia } from '../models';
+import { Ausencia, PanelDiario } from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class AbsenceService {
@@ -16,7 +16,19 @@ export class AbsenceService {
     return this.http.get<Ausencia[]>(`${this.url}/`, { params: httpParams });
   }
 
-  crear(data: { fecha: string; horas: number[]; descripcion?: string; profesor_id?: number }) {
+  panel(fecha?: string) {
+    let params = new HttpParams();
+    if (fecha) params = params.set('fecha', fecha);
+    return this.http.get<PanelDiario>(`${this.url}/panel/`, { params });
+  }
+
+  crear(data: {
+    fecha: string;
+    horas: number[];
+    descripcion?: string;
+    tareas?: string;
+    profesor_id?: number;
+  }) {
     return this.http.post<{
       creadas: Ausencia[];
       ignoradas: number[];

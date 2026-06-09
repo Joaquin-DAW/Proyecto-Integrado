@@ -30,7 +30,7 @@ export class ForgotPasswordComponent {
         this.loading = false;
       },
       error: () => {
-        this.error = 'No se pudo solicitar la recuperacion de contraseña.';
+        this.error = 'No se pudo solicitar la recuperación de contraseña.';
         this.loading = false;
       },
     });

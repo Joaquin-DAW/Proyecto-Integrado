@@ -25,6 +25,7 @@ export class MyAbsencesComponent implements OnInit {
     fecha: '',
     horas: [] as number[],
     descripcion: '',
+    tareas: '',
   };
 
   constructor(
@@ -89,10 +90,11 @@ export class MyAbsencesComponent implements OnInit {
       fecha: this.form.fecha,
       horas: this.form.horas,
       descripcion: this.form.descripcion,
+      tareas: this.form.tareas,
     }).subscribe({
       next: () => {
         this.exito = 'Ausencia registrada correctamente.';
-        this.form = { fecha: '', horas: [], descripcion: '' };
+        this.form = { fecha: '', horas: [], descripcion: '', tareas: '' };
         this.guardando = false;
         this.cargarDatos();
       },

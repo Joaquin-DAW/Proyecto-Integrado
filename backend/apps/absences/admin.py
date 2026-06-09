@@ -4,9 +4,9 @@ from .models import Ausencia
 
 @admin.register(Ausencia)
 class AusenciaAdmin(admin.ModelAdmin):
-    list_display = ('profesor', 'fecha', 'hora_tramo', 'justificada', 'descripcion')
+    list_display = ('profesor', 'fecha', 'hora_tramo', 'justificada', 'descripcion', 'tareas')
     list_filter = ('justificada', 'fecha')
-    search_fields = ('horario_entry__profesor__nombre',)
+    search_fields = ('horario_entry__profesor__nombre', 'descripcion', 'tareas')
     date_hierarchy = 'fecha'
 
     def profesor(self, obj):

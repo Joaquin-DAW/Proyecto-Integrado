@@ -3,6 +3,31 @@ from rest_framework import serializers
 from .models import User, Profesor
 
 
+def validate_password_strength(value):
+    """
+    Reglas propias del proyecto para contrasenas nuevas.
+
+    Django ya filtra contrasenas comunes o demasiado parecidas al usuario; aqui
+    se anade una politica facil de explicar en la interfaz.
+    """
+    errores = []
+
+    if len(value) < 8:
+        errores.append('La contrasena debe tener al menos 8 caracteres.')
+    if not any(char.isalpha() for char in value):
+        errores.append('La contrasena debe incluir al menos una letra.')
+    if not any(char.isdigit() for char in value):
+        errores.append('La contrasena debe incluir al menos un numero.')
+    if not any(not char.isalnum() and not char.isspace() for char in value):
+        errores.append('La contrasena debe incluir al menos un caracter especial.')
+
+    if errores:
+        raise serializers.ValidationError(errores)
+
+    validate_password(value)
+    return value
+
+
 class UserSerializer(serializers.ModelSerializer):
     """Datos de usuario que se pueden mandar al frontend sin exponer contraseña."""
 
@@ -62,8 +87,7 @@ class CreateUserForProfesorSerializer(serializers.Serializer):
         return value
 
     def validate_password(self, value):
-        validate_password(value)
-        return value
+        return validate_password_strength(value)
 
 
 class ChangePasswordSerializer(serializers.Serializer):
@@ -73,8 +97,7 @@ class ChangePasswordSerializer(serializers.Serializer):
     nueva_password = serializers.CharField(write_only=True)
 
     def validate_nueva_password(self, value):
-        validate_password(value)
-        return value
+        return validate_password_strength(value)
 
 
 class PasswordResetRequestSerializer(serializers.Serializer):
@@ -91,8 +114,7 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
     nueva_password = serializers.CharField(write_only=True)
 
     def validate_nueva_password(self, value):
-        validate_password(value)
-        return value
+        return validate_password_strength(value)
 
 
 class UpdateUserSerializer(serializers.ModelSerializer):

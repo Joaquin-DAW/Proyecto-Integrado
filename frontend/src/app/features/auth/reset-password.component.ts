@@ -14,6 +14,7 @@ export class ResetPasswordComponent implements OnInit {
   uid = '';
   token = '';
   form = { nueva_password: '', confirmar: '' };
+  mostrarPasswords = false;
   loading = false;
   error = '';
   mensaje = '';
@@ -37,8 +38,22 @@ export class ResetPasswordComponent implements OnInit {
       this.form.nueva_password !== this.form.confirmar;
   }
 
+  get passwordChecks() {
+    const password = this.form.nueva_password;
+    return [
+      { texto: 'Mínimo 8 caracteres', ok: password.length >= 8 },
+      { texto: 'Al menos una letra', ok: /[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/.test(password) },
+      { texto: 'Al menos un número', ok: /\d/.test(password) },
+      { texto: 'Al menos un carácter especial', ok: /[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9\s]/.test(password) },
+    ];
+  }
+
+  get passwordValida(): boolean {
+    return this.passwordChecks.every(regla => regla.ok);
+  }
+
   onSubmit() {
-    if (!this.uid || !this.token || this.passwordsNoCoinciden || !this.form.nueva_password) return;
+    if (!this.uid || !this.token || this.passwordsNoCoinciden || !this.passwordValida) return;
     this.loading = true;
     this.error = '';
     this.mensaje = '';
@@ -47,10 +62,13 @@ export class ResetPasswordComponent implements OnInit {
       next: res => {
         this.mensaje = res.mensaje;
         this.loading = false;
+        this.mostrarPasswords = false;
         setTimeout(() => this.router.navigate(['/login']), 1200);
       },
       error: (err) => {
-        this.error = err?.error?.error ?? 'No se pudo cambiar la contraseña.';
+        this.error = err?.error?.error
+          ?? err?.error?.nueva_password?.[0]
+          ?? 'No se pudo cambiar la contraseña.';
         this.loading = false;
       },
     });

@@ -19,19 +19,14 @@
           [(ngModel)]="filtroBusqueda"
         />
       </div>
-      <div class="col-12 col-sm-6 col-lg-3">
+      <div class="col-12 col-sm-auto">
         <label class="form-label mb-1 small">Estado</label>
-        <select class="form-select form-select-sm" [(ngModel)]="filtroEstado">
+        <select class="form-select form-select-sm w-auto" [(ngModel)]="filtroEstado">
           <option value="TODOS">Todos</option>
           <option value="CON_CUENTA">Con cuenta</option>
           <option value="SIN_CUENTA">Sin cuenta</option>
           <option value="DIRECTIVO">Equipo directivo</option>
         </select>
-      </div>
-      <div class="col-12 col-sm-6 col-lg-3">
-        <button class="btn btn-sm btn-outline-secondary w-100" (click)="cargar()" [disabled]="loading">
-          Recargar
-        </button>
       </div>
     </div>
   </div>

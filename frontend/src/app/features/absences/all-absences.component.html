@@ -2,9 +2,9 @@
   <h5 class="mb-0">Gestión de ausencias</h5>
 </div>
 
-<div class="row g-3 mb-3">
+<div class="row g-3">
   <div class="col-12 col-xl-5">
-    <div class="card shadow-sm h-100">
+    <div class="card shadow-sm">
       <div class="card-header">
         <h6 class="mb-0">Registrar ausencia</h6>
       </div>
@@ -102,15 +102,18 @@
   </div>
 
   <div class="col-12 col-xl-7">
-    <div class="card shadow-sm h-100">
-      <div class="card-header">
-        <h6 class="mb-0">Filtro</h6>
-      </div>
-      <div class="card-body">
-        <div class="row g-2 align-items-end">
-          <div class="col-auto">
-            <label class="form-label mb-1 small">Filtrar por fecha</label>
+    <div class="card shadow-sm">
+      <div class="card-header d-flex flex-column flex-lg-row gap-2 justify-content-between align-items-lg-end">
+        <div>
+          <h6 class="mb-0">Ausencias registradas</h6>
+          <small class="text-muted">{{ ausencias.length }} resultado(s)</small>
+        </div>
+
+        <div class="d-flex flex-column flex-sm-row gap-2 align-items-sm-end">
+          <div>
+            <label class="form-label mb-1 small" for="filtro-fecha">Fecha</label>
             <input
+              id="filtro-fecha"
               type="date"
               class="form-control form-control-sm"
               [(ngModel)]="filtroFecha"
@@ -118,7 +121,7 @@
             />
           </div>
           @if (filtroFecha) {
-            <div class="col-auto">
+            <div>
               <button class="btn btn-sm btn-outline-secondary" (click)="limpiarFiltro()">
                 Limpiar filtro
               </button>
@@ -126,75 +129,75 @@
           }
         </div>
       </div>
-    </div>
-  </div>
-</div>
 
-<div class="card shadow-sm">
-  <div class="card-body p-0">
-    @if (loading) {
-      <div class="text-center py-4">
-        <div class="spinner-border text-primary"></div>
+      <div class="card-body p-0">
+        @if (loading) {
+          <div class="text-center py-4">
+            <div class="spinner-border text-primary"></div>
+          </div>
+        } @else if (ausencias.length === 0) {
+          <p class="text-muted text-center py-4 mb-0">No hay ausencias registradas.</p>
+        } @else {
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Fecha</th>
+                  <th>Profesor</th>
+                  <th>Hora</th>
+                  <th>Asignatura</th>
+                  <th>Grupo</th>
+                  <th>Aula</th>
+                  <th>Notas</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (a of ausencias; track a.id) {
+                  <tr>
+                    <td class="text-nowrap">{{ a.fecha | date: 'dd/MM/yyyy' }}</td>
+                    <td class="small">{{ a.profesor_nombre }}</td>
+                    <td class="text-center">{{ a.hora }}</td>
+                    <td>{{ a.asignatura }}</td>
+                    <td class="small text-muted">{{ a.curso || '-' }}</td>
+                    <td>{{ a.aula || '-' }}</td>
+                    <td class="small">
+                      @if (a.descripcion) {
+                        <div class="text-muted">{{ a.descripcion }}</div>
+                      }
+                      @if (a.tareas) {
+                        <div class="text-primary">Tareas: {{ a.tareas }}</div>
+                      }
+                      @if (!a.descripcion && !a.tareas) {
+                        <span class="text-muted">-</span>
+                      }
+                    </td>
+                    <td>
+                      <button
+                        class="btn btn-sm"
+                        [class.btn-success]="a.justificada"
+                        [class.btn-outline-warning]="!a.justificada"
+                        (click)="toggleJustificada(a)"
+                      >
+                        {{ a.justificada ? 'Justificada' : 'Pendiente' }}
+                      </button>
+                    </td>
+                    <td>
+                      <button
+                        class="btn btn-sm btn-outline-danger"
+                        (click)="eliminar(a.id)"
+                      >
+                        Eliminar
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
       </div>
-    } @else if (ausencias.length === 0) {
-      <p class="text-muted text-center py-4 mb-0">No hay ausencias registradas.</p>
-    } @else {
-      <div class="table-responsive">
-        <table class="table table-hover mb-0">
-          <thead class="table-light">
-            <tr>
-              <th>Fecha</th>
-              <th>Profesor</th>
-              <th>Hora</th>
-              <th>Asignatura</th>
-              <th>Aula</th>
-              <th>Notas</th>
-              <th>Estado</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (a of ausencias; track a.id) {
-              <tr>
-                <td class="text-nowrap">{{ a.fecha | date: 'dd/MM/yyyy' }}</td>
-                <td class="small">{{ a.profesor_nombre }}</td>
-                <td class="text-center">{{ a.hora }}</td>
-                <td>{{ a.asignatura }}</td>
-                <td>{{ a.aula || '-' }}</td>
-                <td class="small">
-                  @if (a.descripcion) {
-                    <div class="text-muted">{{ a.descripcion }}</div>
-                  }
-                  @if (a.tareas) {
-                    <div class="text-primary">Tareas: {{ a.tareas }}</div>
-                  }
-                  @if (!a.descripcion && !a.tareas) {
-                    <span class="text-muted">-</span>
-                  }
-                </td>
-                <td>
-                  <button
-                    class="btn btn-sm"
-                    [class.btn-success]="a.justificada"
-                    [class.btn-outline-warning]="!a.justificada"
-                    (click)="toggleJustificada(a)"
-                  >
-                    {{ a.justificada ? 'Justificada' : 'Pendiente' }}
-                  </button>
-                </td>
-                <td>
-                  <button
-                    class="btn btn-sm btn-outline-danger"
-                    (click)="eliminar(a.id)"
-                  >
-                    Eliminar
-                  </button>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    }
+    </div>
   </div>
 </div>

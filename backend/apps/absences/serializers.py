@@ -10,6 +10,7 @@ class AusenciaSerializer(serializers.ModelSerializer):
         source='horario_entry.profesor.nombre', read_only=True
     )
     asignatura = serializers.CharField(source='horario_entry.asignatura', read_only=True)
+    curso = serializers.CharField(source='horario_entry.curso', read_only=True)
     aula = serializers.CharField(source='horario_entry.aula', read_only=True)
     hora = serializers.IntegerField(source='horario_entry.hora', read_only=True)
     dia = serializers.CharField(source='horario_entry.dia', read_only=True)
@@ -18,7 +19,7 @@ class AusenciaSerializer(serializers.ModelSerializer):
         model = Ausencia
         fields = (
             'id', 'fecha', 'descripcion', 'tareas', 'justificada', 'creada_en',
-            'horario_entry', 'profesor_nombre', 'asignatura', 'aula', 'hora', 'dia',
+            'horario_entry', 'profesor_nombre', 'asignatura', 'curso', 'aula', 'hora', 'dia',
         )
         read_only_fields = ('id', 'creada_en', 'justificada')
 

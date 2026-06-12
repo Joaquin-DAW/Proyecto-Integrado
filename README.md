@@ -1,72 +1,79 @@
 # Horarium
 
-Aplicación web para gestionar horarios, ausencias del profesorado, guardias y partes de ausencias del IES Polígono Sur.
+Horarium es una aplicación web para gestionar horarios, ausencias, guardias y partes diarios del profesorado de un centro educativo.
 
-El objetivo principal es que el equipo directivo pueda importar el horario del centro, registrar ausencias, ver qué profesorado de guardia está disponible y generar un parte común en PDF que también se puede enviar por correo.
+El proyecto permite importar el horario desde un archivo TXT, consultar horarios con filtros, registrar ausencias, generar partes PDF y enviarlos por correo al equipo directivo. También incluye una tarea automática que genera el parte diario en días lectivos.
 
-## Tecnologías
+## Tecnologías usadas
 
-- `backend`: API con Django REST Framework.
-- `frontend`: interfaz web con Angular.
-- `PostgreSQL`: base de datos.
-- `Redis` y `Celery`: tareas en segundo plano y generación programada de partes.
-- `Docker Compose`: arranque completo del proyecto.
+- Backend: Django y Django REST Framework.
+- Frontend: Angular.
+- Base de datos: PostgreSQL.
+- Tareas en segundo plano: Redis, Celery y Celery Beat.
+- PDF y correo: ReportLab y SMTP.
+- Despliegue: Docker Compose. En producción se ha probado en AWS EC2.
 
-## Funcionalidades principales
+## Requisitos previos
 
-- Importación del horario desde un fichero `.txt`.
-- Consulta de horarios por profesor, día, grupo, asignatura y aula.
-- Gestión de usuarios y roles: profesorado y equipo directivo.
-- Registro de ausencias propias por parte del profesorado.
-- Registro de ausencias de cualquier profesor por parte del equipo directivo.
-- Campo de tareas asociado a la ausencia, para indicar qué debe hacer el alumnado durante la guardia.
-- Panel diario para equipo directivo con ausencias, guardias disponibles y profesorado de guardia ausente.
-- Clasificación de guardias por módulo A, módulo B o general.
-- Generación de partes de ausencia en PDF.
-- Envío del parte por email a los usuarios activos del equipo directivo.
-- Recuperación de contraseña por correo si SMTP está configurado.
+Para arrancar el proyecto en local solo hace falta tener instalado:
 
-## Requisitos
+- Git.
+- Docker Desktop.
+- Un navegador web.
 
-Para arrancar el proyecto en local hace falta:
+No es necesario instalar Python, Node, PostgreSQL ni Redis en el equipo, porque todos esos servicios se ejecutan en contenedores Docker.
 
-- Docker Desktop instalado y abierto.
-- Git, si se clona desde GitHub.
+## Instalación local
 
-No hace falta instalar Python, Node, PostgreSQL ni Redis en el ordenador si se usa Docker.
-
-## Configuración inicial
-
-Desde la carpeta del proyecto, copiar la plantilla de entorno:
+Clonar el repositorio:
 
 ```powershell
-cd horarium
+git clone https://github.com/Joaquin-DAW/Proyecto-Integrado.git
+cd Proyecto-Integrado
+```
+
+Crear el archivo de variables de entorno a partir de la plantilla:
+
+```powershell
 copy .env.example .env
 ```
 
-El archivo `.env` contiene la configuración local. No debe subirse a GitHub porque puede contener contraseñas.
+En Linux o macOS sería:
 
-## Arrancar el proyecto
+```bash
+cp .env.example .env
+```
 
-Desde la carpeta `horarium`:
+El archivo `.env` contiene la configuración local del proyecto. No debe subirse a GitHub porque puede contener contraseñas, claves secretas o datos de correo.
+
+## Arrancar la aplicación
+
+Desde la carpeta principal del proyecto:
 
 ```powershell
 docker compose up -d --build
 ```
 
-La primera vez puede tardar unos minutos porque descarga imágenes y compila el frontend.
+La primera vez puede tardar unos minutos, porque Docker descarga imágenes, instala dependencias y compila el frontend.
 
-Comprobar que los contenedores están levantados:
+Para comprobar que todo está levantado:
 
 ```powershell
 docker compose ps
 ```
 
-Deberían aparecer servicios como `backend`, `frontend`, `db`, `redis`, `celery_worker` y `celery_beat`.
+Deberían aparecer contenedores como:
 
-## Usuario de prueba
+- `horarium_frontend`
+- `horarium_backend`
+- `horarium_db`
+- `horarium_redis`
+- `horarium_celery_worker`
+- `horarium_celery_beat`
 
-Para crear o resetear un usuario administrador de demo:
+## Crear usuario de prueba
+
+Una vez arrancados los contenedores, crear el usuario administrador de demo:
 
 ```powershell
 docker compose exec backend python manage.py setup_demo_admin
@@ -77,38 +84,43 @@ Credenciales por defecto:
 - Email: `admin@iespoligonosur.org`
 - Contraseña: `admin1234`
 
-También se puede crear otro usuario de equipo directivo con un email concreto:
+También se puede crear el usuario demo con otro correo:
 
 ```powershell
 docker compose exec backend python manage.py setup_demo_admin --email correo@ejemplo.com --password admin1234
 ```
 
-Este usuario es solo para pruebas locales. En un entorno real habría que crear usuarios reales y cambiar contraseñas.
+Este usuario es solo para pruebas. En una instalación real conviene crear usuarios propios y cambiar las contraseñas iniciales.
 
-## URLs principales
+## Acceso a la aplicación
+
+Con Docker levantado:
 
 - Aplicación web: <http://localhost/>
 - API backend: <http://localhost:8000/api/>
-- Admin de Django: <http://localhost:8000/admin/>
+- Administración de Django: <http://localhost:8000/admin/>
+
+Si el puerto 80 está ocupado por otro programa, el contenedor del frontend no podrá arrancar correctamente. En ese caso hay que liberar el puerto o cambiar el mapeo en `docker-compose.yml`.
 
 ## Primer uso recomendado
 
-1. Entrar en <http://localhost/> con el usuario de prueba.
-2. Ir a `Importar Horario`.
-3. Subir el fichero `backend/Datos_horarios.txt`.
-4. Revisar que se crean profesores y entradas de horario.
-5. Probar el buscador de horarios.
-6. Crear una cuenta para algún profesor desde `Gestión de Usuarios`.
-7. Registrar una ausencia con descripción y tareas.
-8. Revisar el `Panel diario` de esa fecha.
-9. Generar un parte PDF desde `Partes`.
-10. Enviar el parte por email si SMTP está configurado.
+Después de iniciar sesión con el usuario de prueba:
 
-## Configurar envío de correo
+1. Entrar en `Importar`.
+2. Subir el archivo `backend/Datos_horarios.txt`.
+3. Comprobar que se importan profesores y entradas de horario.
+4. Revisar el buscador de horarios.
+5. Crear una cuenta para algún profesor desde `Usuarios`.
+6. Registrar una ausencia con descripción y tareas.
+7. Revisar el `Panel diario`.
+8. Generar un parte PDF desde `Partes`.
+9. Enviar el parte por correo si SMTP está configurado.
 
-Por defecto, el proyecto puede funcionar sin enviar correos reales. Para pruebas reales se puede configurar SMTP en `.env`.
+## Configurar el correo
 
-Ejemplo con Gmail:
+Por defecto, el proyecto puede funcionar sin enviar correos reales. En local, si se deja el backend de consola, los correos se imprimen en los logs del backend.
+
+Para enviar correos reales hay que configurar SMTP en `.env`. Ejemplo con Gmail:
 
 ```env
 EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
@@ -121,74 +133,108 @@ DEFAULT_FROM_EMAIL=Horarium <cuenta-del-proyecto@gmail.com>
 FRONTEND_URL=http://localhost
 ```
 
-En Gmail no se debe usar la contraseña normal de la cuenta. Lo recomendable es crear una contraseña de aplicación y ponerla en `EMAIL_HOST_PASSWORD`.
+En Gmail no se usa la contraseña normal de la cuenta. Hay que crear una contraseña de aplicación y ponerla en `EMAIL_HOST_PASSWORD`.
 
-Después de cambiar el `.env`, reiniciar los servicios que leen configuración:
+Después de modificar `.env`, reiniciar los servicios que leen esa configuración:
 
 ```powershell
 docker compose up -d --force-recreate backend celery_worker celery_beat
 ```
 
-El parte se envía a los usuarios con rol `EQUIPO_DIRECTIVO` que estén activos y tengan email.
+Los partes se envían a los usuarios activos con rol `EQUIPO_DIRECTIVO`.
 
 ## Parte diario automático
 
-Celery Beat registra una tarea para generar el parte común de ausencias en días lectivos.
-
-Para crear o actualizar esa tarea manualmente:
+Horarium usa Celery Beat para programar la generación del parte diario. La tarea queda registrada al arrancar el backend, pero también se puede crear o actualizar manualmente:
 
 ```powershell
 docker compose exec backend python manage.py setup_periodic_tasks
 ```
 
-El flujo automático usa el parte común del IES. Los partes por módulo A/B siguen disponibles para generación manual.
+La tarea genera el parte general del IES de lunes a viernes a las 08:00, usando la zona horaria configurada en Django.
 
-## Comprobaciones útiles
+Para comprobar que la tarea existe:
 
-Revisar configuración general de Django:
+```powershell
+docker compose exec backend python manage.py shell -c "from django_celery_beat.models import PeriodicTask; [print(t.name, t.task, t.crontab) for t in PeriodicTask.objects.all()]"
+```
+
+## Comandos útiles
+
+Ver logs del backend:
+
+```powershell
+docker compose logs --tail=100 backend
+```
+
+Comprobar la configuración de Django:
 
 ```powershell
 docker compose exec backend python manage.py check
 ```
 
-Ejecutar pruebas del backend:
+Ejecutar las pruebas del backend:
 
 ```powershell
 docker compose exec backend python manage.py test
 ```
 
-Reconstruir solo el frontend si se cambian pantallas Angular:
+Reconstruir solo el frontend:
 
 ```powershell
 docker compose build frontend
 docker compose up -d frontend
 ```
 
-## Parar el proyecto
-
-Para parar los contenedores:
+Parar los contenedores:
 
 ```powershell
 docker compose down
 ```
 
-Para parar y borrar también los datos de la base de datos local:
+Parar los contenedores y borrar los datos locales de PostgreSQL:
 
 ```powershell
 docker compose down -v
 ```
 
-`-v` elimina los datos guardados en PostgreSQL, incluyendo usuarios, horarios importados, ausencias y partes.
+El comando con `-v` borra usuarios, horarios importados, ausencias y partes guardados en la base de datos local.
+
+## Despliegue en AWS
+
+El proyecto incluye un archivo `docker-compose.prod.yml` para desplegar Horarium en una instancia EC2 de AWS.
+
+Resumen del proceso:
+
+1. Crear una instancia EC2 con Ubuntu.
+2. Abrir el puerto 80 para HTTP y el puerto 22 solo para la IP que vaya a conectarse por SSH.
+3. Instalar Docker y Docker Compose en la instancia.
+4. Clonar el repositorio.
+5. Crear el archivo `.env` desde `.env.aws.example`.
+6. Cambiar `SECRET_KEY`, `ALLOWED_HOSTS`, `CORS_ALLOWED_ORIGINS`, `FRONTEND_URL` y la contraseña de PostgreSQL.
+7. Levantar el proyecto:
+
+```bash
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+Crear el usuario de prueba en AWS:
+
+```bash
+docker compose -f docker-compose.prod.yml exec backend python manage.py setup_demo_admin
+```
+
+En producción solo se expone el puerto 80. PostgreSQL, Redis y el backend quedan como servicios internos dentro de Docker.
 
 ## Problemas comunes
 
-Si el login falla después de reconstruir el frontend, probar una recarga fuerte:
+Si el login falla después de reconstruir el frontend, probar una recarga fuerte del navegador:
 
 ```text
 Ctrl + F5
 ```
 
-También se puede abrir una ventana de incógnito para evitar tokens antiguos guardados en el navegador.
+También puede ayudar abrir una ventana de incógnito para evitar tokens antiguos guardados en el navegador.
 
 Si el usuario de prueba no funciona:
 
@@ -196,10 +242,16 @@ Si el usuario de prueba no funciona:
 docker compose exec backend python manage.py setup_demo_admin
 ```
 
-Si el envío de email falla, comprobar:
+Si los correos no llegan:
 
-- que `.env` está guardado;
-- que se reinició `backend`, `celery_worker` y `celery_beat`;
-- que `EMAIL_BACKEND` es `django.core.mail.backends.smtp.EmailBackend`;
-- que la contraseña de Gmail es una contraseña de aplicación;
-- que hay al menos un usuario activo con rol `EQUIPO_DIRECTIVO`.
+- comprobar que `.env` está guardado;
+- revisar que `EMAIL_BACKEND` sea `django.core.mail.backends.smtp.EmailBackend`;
+- usar una contraseña de aplicación si se utiliza Gmail;
+- reiniciar `backend`, `celery_worker` y `celery_beat`;
+- comprobar que existe al menos un usuario activo con rol `EQUIPO_DIRECTIVO`.
+
+Si se cambia el archivo `.env` y no se nota el cambio, recrear los servicios afectados:
+
+```powershell
+docker compose up -d --force-recreate backend celery_worker celery_beat
+```

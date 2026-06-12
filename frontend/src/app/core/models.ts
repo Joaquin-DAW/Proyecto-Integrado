@@ -38,6 +38,7 @@ export interface Ausencia {
   horario_entry: number;
   profesor_nombre: string;
   asignatura: string;
+  curso: string;
   aula: string;
   hora: number;
   dia: string;

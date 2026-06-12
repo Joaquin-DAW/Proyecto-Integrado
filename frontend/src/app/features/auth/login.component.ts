@@ -13,6 +13,7 @@ import { AuthService } from '../../core/services/auth.service';
 export class LoginComponent {
   email = '';
   password = '';
+  mostrarPassword = false;
   error = '';
   loading = false;
 

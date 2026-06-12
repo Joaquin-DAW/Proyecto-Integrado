@@ -13,6 +13,7 @@ import { AuthService } from '../../core/services/auth.service';
 })
 export class ChangePasswordComponent {
   form = { password_actual: '', nueva_password: '', confirmar: '' };
+  mostrarPasswords = false;
   guardando = false;
   error = '';
   exito = '';
@@ -24,8 +25,22 @@ export class ChangePasswordComponent {
       this.form.nueva_password !== this.form.confirmar;
   }
 
+  get passwordChecks() {
+    const password = this.form.nueva_password;
+    return [
+      { texto: 'Mínimo 8 caracteres', ok: password.length >= 8 },
+      { texto: 'Al menos una letra', ok: /[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/.test(password) },
+      { texto: 'Al menos un número', ok: /\d/.test(password) },
+      { texto: 'Al menos un carácter especial', ok: /[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9\s]/.test(password) },
+    ];
+  }
+
+  get passwordValida(): boolean {
+    return this.passwordChecks.every(regla => regla.ok);
+  }
+
   onSubmit() {
-    if (this.passwordsNoCoinciden) return;
+    if (this.passwordsNoCoinciden || !this.passwordValida) return;
     this.guardando = true;
     this.error = '';
     this.exito = '';
@@ -37,12 +52,15 @@ export class ChangePasswordComponent {
         this.exito = 'Contraseña actualizada correctamente.';
         this.guardando = false;
         this.form = { password_actual: '', nueva_password: '', confirmar: '' };
+        this.mostrarPasswords = false;
         if (eraCambioForzado) {
           setTimeout(() => this.router.navigate(['/dashboard']), 1500);
         }
       },
       error: (err) => {
-        this.error = err?.error?.error ?? 'Error al cambiar la contraseña.';
+        this.error = err?.error?.error
+          ?? err?.error?.nueva_password?.[0]
+          ?? 'Error al cambiar la contraseña.';
         this.guardando = false;
       },
     });
